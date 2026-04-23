@@ -130,6 +130,16 @@ body {
     font-size: 2rem;
 }
 
+#festival {
+    width: 94%;
+    max-width: 94%;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    font-size: 2rem;
+    line-height: 1.2;
+}
+
 .displayLocal {
     display: flex;
     justify-content: space-between;

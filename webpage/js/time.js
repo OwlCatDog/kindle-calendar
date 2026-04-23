@@ -46,6 +46,25 @@ function fetchJson(url) {
     });
 }
 
+function fitFestivalText() {
+    const festivalNode = document.getElementById("festival");
+    if (!festivalNode) {
+        return;
+    }
+
+    const maxFontRem = 2;
+    const minFontRem = 1;
+    const stepRem = 0.05;
+
+    let currentSize = maxFontRem;
+    festivalNode.style.fontSize = `${currentSize}rem`;
+
+    while (festivalNode.scrollWidth > festivalNode.clientWidth && currentSize > minFontRem) {
+        currentSize = Math.max(minFontRem, Number((currentSize - stepRem).toFixed(2)));
+        festivalNode.style.fontSize = `${currentSize}rem`;
+    }
+}
+
 function updateTime() {
     const date = new Date();
     const utc8DiffMinutes = date.getTimezoneOffset() + 480;
@@ -75,17 +94,20 @@ async function updateLunar() {
 
         document.getElementById("lunar").innerHTML = dayString;
 
-        let finalAns = "";
+        const finalAnsParts = [];
         if (jieqi !== "") {
-            finalAns += jieqi;
+            finalAnsParts.push(jieqi);
         }
         if (lunarFestival !== "") {
-            finalAns += "&nbsp;&nbsp;" + lunarFestival;
+            finalAnsParts.push(lunarFestival);
         }
         if (festival !== "") {
-            finalAns += "&nbsp;&nbsp;" + festival;
+            finalAnsParts.push(festival);
         }
-        document.getElementById("festival").innerHTML = finalAns;
+
+        const festivalNode = document.getElementById("festival");
+        festivalNode.textContent = finalAnsParts.join("  ");
+        fitFestivalText();
     } catch (error) {
         console.error("updateLunar failed", error);
     } finally {
@@ -209,3 +231,8 @@ updateLunar();
 updateWarning();
 renderSensors();
 waitForWidgetRender();
+
+window.addEventListener("resize", fitFestivalText);
+if (document.fonts && document.fonts.ready) {
+    document.fonts.ready.then(fitFestivalText);
+}
