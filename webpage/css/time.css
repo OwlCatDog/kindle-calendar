@@ -47,12 +47,11 @@ body {
 } */
 
 #widgetCacheImage {
-    position: absolute;
-    left: 40px;
-    top: 20px;
-    width: 456px;
+    width: 75%;
     height: auto;
     object-fit: contain;
+    margin: 10px auto;  /* 上下10px，左右自动居中 */
+    display: block;     /* 确保块级元素特性 */
 }
 
 .battery {
