@@ -12,6 +12,7 @@ const renderState = {
     sensor: false,
     time: false,
     warning: false,
+    widget: false,
 };
 
 window.__KINDLE_RENDER_READY__ = false;
@@ -28,7 +29,7 @@ function markRenderReady(step) {
 
 setTimeout(() => {
     window.__KINDLE_RENDER_READY__ = true;
-}, 12000);
+}, 18000);
 
 function formatDate(date) {
     const year = date.getFullYear();
@@ -129,16 +130,48 @@ function updatePower() {
     markRenderReady("power");
 }
 
-async function putElegantSentence() {
-    try {
-        const resp = await fetchJson(elegantSentenceQuery);
-        if (resp.code !== 200) {
+function isWeatherWidgetRendered() {
+    const widgetNode = document.getElementById("ww_bc810257cf5c1");
+    if (!widgetNode) {
+        return true;
+    }
+
+    if (widgetNode.querySelector("iframe")) {
+        return true;
+    }
+
+    const normalizedText = widgetNode.textContent.replace(/\s+/g, "").trim();
+    if (normalizedText !== "" && normalizedText !== "天气插件") {
+        return true;
+    }
+
+    return widgetNode.children.length > 1;
+}
+
+function waitForWidgetRender() {
+    const startedAt = Date.now();
+    const timeoutMs = 12000;
+
+    function finalize() {
+        markRenderReady("widget");
+    }
+
+    function poll() {
+        if (isWeatherWidgetRendered()) {
+            finalize();
             return;
         }
-        document.getElementById("sentence").innerHTML = `"${resp.result.word}"&nbsp;&nbsp;${resp.result.wordfrom}`;
-    } catch (error) {
-        console.error("putElegantSentence failed", error);
+
+        if (Date.now() - startedAt >= timeoutMs) {
+            console.warn("weather widget did not finish rendering before timeout");
+            finalize();
+            return;
+        }
+
+        window.setTimeout(poll, 250);
     }
+
+    poll();
 }
 
 async function updateWarning() {
@@ -185,4 +218,4 @@ updateTime();
 updateLunar();
 updateWarning();
 renderSensors();
-// putElegantSentence();
+waitForWidgetRender();

@@ -52,7 +52,7 @@ screenshotApp.get('/', async (req, res) => {
 
     const page = await browser.newPage();
     await setupPage(page);
-    await page.goto(targetUrl, { waitUntil: 'domcontentloaded', timeout: 15000 });
+    await page.goto(targetUrl, { waitUntil: 'domcontentloaded', timeout: 20000 });
     await waitForPageToSettle(page);
     await page.screenshot({ path: screenshotPath, type: 'png' });
 
@@ -108,8 +108,8 @@ async function waitForPageToSettle(page) {
     }
     return document.fonts.status === 'loaded';
   }, { timeout: 5000 }).catch(() => {});
-  await page.waitForFunction(() => window.__KINDLE_RENDER_READY__ === true, { timeout: 10000 }).catch(() => {});
-  await page.waitForTimeout(400);
+  await page.waitForFunction(() => window.__KINDLE_RENDER_READY__ === true, { timeout: 16000 }).catch(() => {});
+  await page.waitForTimeout(800);
 }
 
 function convertImage(filename) {
