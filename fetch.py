@@ -39,8 +39,22 @@ def empty_sensor_state():
     }
 
 
+def build_sensor_state(name, temp, humi, volt, rssi, batt):
+    return {
+        "temp": temp,
+        "humi": humi,
+        "volt": volt,
+        "name": name,
+        "rssi": rssi,
+        "batt": batt,
+        "time": time.asctime(time.localtime(time.time())),
+        "stamp": time.time(),
+    }
+
+
 innersen = empty_sensor_state()
 outersen = empty_sensor_state()
+extra_sensors = {}
 
 rev_db_add1 = False
 rev_db_add2 = False
@@ -77,7 +91,7 @@ def get_sentence():
 
 @app.route("/sensors", methods=["GET", "POST"])
 def fetch_sensor():
-    global innersen, outersen, rev_db_add1, rev_db_add2
+    global innersen, outersen, extra_sensors, rev_db_add1, rev_db_add2
 
     name = flask.request.args.get("name")
     temp = flask.request.args.get("temp")
@@ -88,37 +102,24 @@ def fetch_sensor():
 
     try:
         if name == INNER_SENSOR_MAC:
-            innersen = {
-                "temp": temp,
-                "humi": humi,
-                "volt": volt,
-                "name": name,
-                "rssi": rssi,
-                "batt": batt,
-                "time": time.asctime(time.localtime(time.time())),
-                "stamp": time.time(),
-            }
+            innersen = build_sensor_state(name, temp, humi, volt, rssi, batt)
             rev_db_add1 = not rev_db_add1
 
-        if name == OUTER_SENSOR_MAC:
-            outersen = {
-                "temp": temp,
-                "humi": humi,
-                "volt": volt,
-                "name": name,
-                "rssi": rssi,
-                "batt": batt,
-                "time": time.asctime(time.localtime(time.time())),
-                "stamp": time.time(),
-            }
+        elif name == OUTER_SENSOR_MAC:
+            outersen = build_sensor_state(name, temp, humi, volt, rssi, batt)
             rev_db_add2 = not rev_db_add2
+        elif name:
+            extra_sensors[name] = build_sensor_state(name, temp, humi, volt, rssi, batt)
     finally:
         return "123"
 
 
 @app.route("/getSensor", methods=["GET"])
 def get_sensor():
-    return flask.jsonify([innersen, outersen])
+    sensors = [innersen, outersen]
+    for sensor_name in sorted(extra_sensors.keys()):
+        sensors.append(extra_sensors[sensor_name])
+    return flask.jsonify(sensors)
 
 
 def fetch_json(url):
@@ -163,13 +164,23 @@ def update_warning():
 
 @scheduler.task("interval", id="delete_stale_sensor_job", seconds=700, misfire_grace_time=900)
 def delete_data():
-    global innersen, outersen
+    global innersen, outersen, extra_sensors
 
-    if time.time() - innersen["stamp"] > 1500:
+    now = time.time()
+
+    if now - innersen["stamp"] > 1500:
         innersen = empty_sensor_state()
 
-    if time.time() - outersen["stamp"] > 1500:
+    if now - outersen["stamp"] > 1500:
         outersen = empty_sensor_state()
+
+    stale_sensor_names = []
+    for sensor_name, sensor_state in extra_sensors.items():
+        if now - sensor_state.get("stamp", 0) > 1500:
+            stale_sensor_names.append(sensor_name)
+
+    for sensor_name in stale_sensor_names:
+        extra_sensors.pop(sensor_name, None)
 
 
 app.config.from_object(Config())

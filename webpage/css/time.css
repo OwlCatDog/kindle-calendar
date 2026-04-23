@@ -133,6 +133,7 @@ body {
 #festival {
     width: 94%;
     max-width: 94%;
+    margin-top: 8px;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -233,42 +234,73 @@ body {
 }
 
 #sen {
-    margin-top: 20px;
-    flex-wrap: wrap;
-    padding: 20px;
+    margin: 26px 18px 0;
+    padding: 0 4px;
+    font-family: "hanzi";
+}
+
+.sen-row {
     display: flex;
     justify-content: space-between;
+    align-items: flex-start;
+    padding: 10px 0;
 }
 
-#sen img {
-    width: 50px;
+.sen-row + .sen-row {
+    border-top: 1px solid #cfcfcf;
 }
 
-.subsen {
+.sen-label {
     display: flex;
-    flex-direction: column;
     align-items: center;
-
-    font-family: "hanzi";
-
-    font-size: 30px;
-    height: 100px;
-}
-
-#valhmi-in {
-    padding-top: 2px;
-}
-
-#valhmi-out {
+    gap: 8px;
+    min-width: 0;
     padding-top: 4px;
 }
 
-#valtmew-in,
-#valtmew-out {
-    padding-top: 5px;
-    font-size: 0.9rem;
+.sen-label img {
+    width: 24px;
+    height: 24px;
+    object-fit: contain;
+    flex: 0 0 auto;
 }
 
-#valtmew-in {
-    padding-top: 10px;
+.sen-name {
+    font-size: 1.16rem;
+    white-space: nowrap;
+}
+
+.sen-values {
+    display: flex;
+    justify-content: flex-end;
+    flex-wrap: wrap;
+    gap: 10px;
+    max-width: 340px;
+}
+
+.sen-chip {
+    display: flex;
+    align-items: baseline;
+    gap: 6px;
+    border: 1px solid #000000;
+    border-radius: 999px;
+    padding: 2px 8px;
+}
+
+.sen-chip-name {
+    font-size: 0.95rem;
+    white-space: nowrap;
+}
+
+.sen-value {
+    font-family: "digit";
+    font-size: 1.56rem;
+    line-height: 1;
+    white-space: nowrap;
+}
+
+.sen-timeout {
+    margin-top: 4px;
+    padding-left: 2px;
+    font-size: 1rem;
 }

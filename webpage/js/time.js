@@ -1,5 +1,9 @@
 const appConfig = window.__APP_CONFIG__ || {};
 const apiBaseUrl = (appConfig.apiBaseUrl || "http://127.0.0.1:3643").replace(/\/$/, "");
+const configuredSensorTimeoutSeconds = Number.parseInt(appConfig.sensorTimeoutSeconds, 10);
+const sensorTimeoutSeconds = Number.isFinite(configuredSensorTimeoutSeconds) && configuredSensorTimeoutSeconds > 0
+    ? configuredSensorTimeoutSeconds
+    : 20 * 60;
 
 const sensorQuery = `${apiBaseUrl}/getSensor`;
 const dateQuery = `${apiBaseUrl}/lunar`;
@@ -209,17 +213,135 @@ async function updateWarning() {
     }
 }
 
+function formatSensorValue(value, unit) {
+    const normalized = `${value ?? ""}`.trim();
+    if (normalized === "" || normalized === "-" || normalized.toLowerCase() === "nodata") {
+        return `--${unit}`;
+    }
+    return `${normalized}${unit}`;
+}
+
+function hasSensorValue(sensor) {
+    if (!sensor || typeof sensor !== "object") {
+        return false;
+    }
+
+    const temp = `${sensor.temp ?? ""}`.trim().toLowerCase();
+    const humi = `${sensor.humi ?? ""}`.trim().toLowerCase();
+    return temp !== "" && temp !== "-" && temp !== "nodata"
+        && humi !== "" && humi !== "-" && humi !== "nodata";
+}
+
+function getSensorLabel(sensor, index) {
+    const configuredLabels = Array.isArray(appConfig.sensorLabels) ? appConfig.sensorLabels : [];
+    const configuredLabel = configuredLabels[index];
+    if (typeof configuredLabel === "string" && configuredLabel.trim() !== "") {
+        return configuredLabel.trim();
+    }
+
+    if (index === 0) {
+        return "室内";
+    }
+    if (index === 1) {
+        return "室外";
+    }
+    return `传感器${index + 1}`;
+}
+
+function createSensorChip(label, value) {
+    const chipNode = document.createElement("div");
+    chipNode.className = "sen-chip";
+
+    const nameNode = document.createElement("span");
+    nameNode.className = "sen-chip-name";
+    nameNode.textContent = label;
+
+    const valueNode = document.createElement("label");
+    valueNode.className = "sen-value";
+    valueNode.textContent = value;
+
+    chipNode.appendChild(nameNode);
+    chipNode.appendChild(valueNode);
+    return chipNode;
+}
+
+function renderSensorRowValues(containerId, sensors, unit, picker) {
+    const containerNode = document.getElementById(containerId);
+    if (!containerNode) {
+        return;
+    }
+
+    containerNode.innerHTML = "";
+
+    if (!Array.isArray(sensors) || sensors.length === 0) {
+        containerNode.appendChild(createSensorChip("传感器", formatSensorValue("-", unit)));
+        return;
+    }
+
+    sensors.forEach((sensor, index) => {
+        const label = getSensorLabel(sensor, index);
+        const value = formatSensorValue(picker(sensor), unit);
+        containerNode.appendChild(createSensorChip(label, value));
+    });
+}
+
+function isSensorTimedOut(sensor) {
+    if (!sensor || typeof sensor !== "object") {
+        return true;
+    }
+
+    const stamp = Number(sensor.stamp);
+    if (!hasSensorValue(sensor) || !Number.isFinite(stamp) || stamp <= 0) {
+        return true;
+    }
+
+    return Date.now() / 1000 - stamp > sensorTimeoutSeconds;
+}
+
+function updateSensorTimeoutBanner(sensors) {
+    const timeoutNode = document.getElementById("sensor-timeout");
+    if (!timeoutNode) {
+        return;
+    }
+
+    const sensorList = Array.isArray(sensors) ? sensors : [];
+    if (sensorList.length === 0) {
+        timeoutNode.textContent = "传感器上报超时";
+        timeoutNode.hidden = false;
+        return;
+    }
+
+    const timeoutTargets = [];
+    sensorList.forEach((sensor, index) => {
+        if (isSensorTimedOut(sensor)) {
+            timeoutTargets.push(getSensorLabel(sensor, index));
+        }
+    });
+
+    if (timeoutTargets.length === 0) {
+        timeoutNode.hidden = true;
+        timeoutNode.textContent = "";
+        return;
+    }
+
+    timeoutNode.textContent = `${timeoutTargets.join("、")}上报超时`;
+    timeoutNode.hidden = false;
+}
+
 async function renderSensors() {
     try {
         const resp = await fetchJson(sensorQuery);
-        document.getElementById("valtmew-out").innerText = resp[1].time;
-        document.getElementById("valtmp-out").innerText = resp[1].temp + "°C";
-        document.getElementById("valhmi-out").innerText = resp[1].humi + "%";
-        document.getElementById("valtmew-in").innerText = resp[0].time;
-        document.getElementById("valtmp-in").innerText = resp[0].temp + "°C";
-        document.getElementById("valhmi-in").innerText = resp[0].humi + "%";
+        const sensors = Array.isArray(resp)
+            ? resp.filter(sensor => sensor && typeof sensor === "object")
+            : [];
+        renderSensorRowValues("temp-values", sensors, "°C", sensor => sensor.temp);
+        renderSensorRowValues("humi-values", sensors, "%", sensor => sensor.humi);
+        updateSensorTimeoutBanner(sensors);
     } catch (error) {
         console.error("renderSensors failed", error);
+        renderSensorRowValues("temp-values", [], "°C", sensor => sensor.temp);
+        renderSensorRowValues("humi-values", [], "%", sensor => sensor.humi);
+        updateSensorTimeoutBanner([]);
     } finally {
         markRenderReady("sensor");
     }

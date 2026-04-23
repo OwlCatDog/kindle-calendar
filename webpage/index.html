@@ -40,30 +40,21 @@
 			</div>
 			<img id="widgetCacheImage" src="/widget.png" alt="天气信息">
 			<div id="sen">
-				<div id="temp" class="subsen">
-					<img src="./img/sen/temperature.png">
-					<label class="spname">室内/室外</label>
-					<div class="view-report-parr">
-						<label class="num" id="valtmp-in">--°C</label>
-						<label class="num" id="valtmp-out">--°C</label>
+				<div id="temp" class="sen-row">
+					<div class="sen-label">
+						<img src="./img/sen/temperature.png" alt="温度">
+						<span class="sen-name">温度</span>
 					</div>
+					<div class="sen-values" id="temp-values"></div>
 				</div>
-				<div id="humi" class="subsen">
-					<img src="./img/sen/湿度.png">
-					<label class="spname">室内/室外</label>
-					<div class="view-report-parr">
-						<label class="num" id="valhmi-in">--%</label>
-						<label class="num" id="valhmi-out">--%</label>
+				<div id="humi" class="sen-row">
+					<div class="sen-label">
+						<img src="./img/sen/湿度.png" alt="湿度">
+						<span class="sen-name">湿度</span>
 					</div>
+					<div class="sen-values" id="humi-values"></div>
 				</div>
-				<div id="timed" class="subsen">
-					<img src="./img/sen/时间.png">
-					<label class="spname">上次报告</label>
-					<div class="view-report-parr">
-						<label class="num" id="valtmew-in">??</label>
-						<label class="num" id="valtmew-out">??</label>
-					</div>
-				</div>
+				<div id="sensor-timeout" class="sen-timeout" hidden></div>
 			</div>
 			<!-- <div id="he-plugin-standard"></div> -->
 		</div><!-- <-footer-> -->
