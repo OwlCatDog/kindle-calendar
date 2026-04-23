@@ -5,7 +5,7 @@ const sensorTimeoutSeconds = Number.isFinite(configuredSensorTimeoutSeconds) && 
     ? configuredSensorTimeoutSeconds
     : 20 * 60;
 
-const sensorQuery = `${apiBaseUrl}/getSensor`;
+const sensorQuery = appConfig.sensorQueryUrl || `${apiBaseUrl}/getSensor`;
 const dateQuery = `${apiBaseUrl}/lunar`;
 const warningQuery = `${apiBaseUrl}/warning`;
 
@@ -233,18 +233,16 @@ function hasSensorValue(sensor) {
 }
 
 function getSensorLabel(sensor, index) {
-    const configuredLabels = Array.isArray(appConfig.sensorLabels) ? appConfig.sensorLabels : [];
-    const configuredLabel = configuredLabels[index];
-    if (typeof configuredLabel === "string" && configuredLabel.trim() !== "") {
-        return configuredLabel.trim();
+    const displayName = `${sensor?.display_name ?? ""}`.trim();
+    if (displayName !== "" && displayName.toLowerCase() !== "nodata") {
+        return displayName;
     }
 
-    if (index === 0) {
-        return "室内";
+    const macName = `${sensor?.name ?? ""}`.trim();
+    if (macName !== "" && macName.toLowerCase() !== "nodata") {
+        return macName;
     }
-    if (index === 1) {
-        return "室外";
-    }
+
     return `传感器${index + 1}`;
 }
 

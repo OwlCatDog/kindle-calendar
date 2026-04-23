@@ -50,7 +50,7 @@ body {
     width: 75%;
     height: auto;
     object-fit: contain;
-    margin: 10px auto;  /* 上下10px，左右自动居中 */
+    margin: 24px auto 8px;  /* 上移留白给日期，下移整体视觉中心 */
     display: block;     /* 确保块级元素特性 */
 }
 
@@ -234,7 +234,7 @@ body {
 }
 
 #sen {
-    margin: 26px 18px 0;
+    margin: 40px 18px 0;
     padding: 0 4px;
     font-family: "hanzi";
 }
@@ -242,8 +242,8 @@ body {
 .sen-row {
     display: flex;
     justify-content: space-between;
-    align-items: flex-start;
-    padding: 10px 0;
+    align-items: center;
+    padding: 9px 0;
 }
 
 .sen-row + .sen-row {
@@ -255,7 +255,6 @@ body {
     align-items: center;
     gap: 8px;
     min-width: 0;
-    padding-top: 4px;
 }
 
 .sen-label img {
@@ -274,27 +273,34 @@ body {
     display: flex;
     justify-content: flex-end;
     flex-wrap: wrap;
-    gap: 10px;
+    gap: 8px;
     max-width: 340px;
 }
 
 .sen-chip {
     display: flex;
-    align-items: baseline;
-    gap: 6px;
+    align-items: center;
+    justify-content: space-between;
+    box-sizing: border-box;
+    width: 108px;
+    height: 32px;
     border: 1px solid #000000;
     border-radius: 999px;
-    padding: 2px 8px;
+    padding: 0 8px;
 }
 
 .sen-chip-name {
-    font-size: 0.95rem;
+    font-size: 0.82rem;
+    line-height: 1;
     white-space: nowrap;
 }
 
 .sen-value {
+    display: inline-block;
+    min-width: 54px;
+    text-align: right;
     font-family: "digit";
-    font-size: 1.56rem;
+    font-size: 1.25rem;
     line-height: 1;
     white-space: nowrap;
 }

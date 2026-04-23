@@ -8,11 +8,22 @@ import requests
 from flask_apscheduler import APScheduler
 from flask_cors import CORS
 
+
+def normalize_sensor_mac(sensor_mac):
+    if not sensor_mac:
+        return ""
+    return sensor_mac.strip().upper()
+
+
 APIKEY = os.getenv("TIANAPI_KEY", "xxx")
 HEFENG_KEY = os.getenv("QWEATHER_KEY", "xxx")
 CURR_POS = os.getenv("QWEATHER_LOCATION", "xxx")
-INNER_SENSOR_MAC = os.getenv("SENSOR_INNER_MAC", "A4:C1:38:CF:B0:D6")
-OUTER_SENSOR_MAC = os.getenv("SENSOR_OUTER_MAC", "A4:C1:38:D5:05:79")
+INNER_SENSOR_MAC = normalize_sensor_mac(os.getenv("SENSOR_INNER_MAC", "A4:C1:38:CF:B0:D6"))
+OUTER_SENSOR_MAC = normalize_sensor_mac(os.getenv("SENSOR_OUTER_MAC", "A4:C1:38:D5:05:79"))
+LIVING_SENSOR_MAC = normalize_sensor_mac(os.getenv("SENSOR_LIVING_MAC", "AA:BB:CC:DD:EE:FF"))
+INNER_SENSOR_NAME = os.getenv("SENSOR_INNER_NAME", "室内")
+OUTER_SENSOR_NAME = os.getenv("SENSOR_OUTER_NAME", "室外")
+LIVING_SENSOR_NAME = os.getenv("SENSOR_LIVING_NAME", "客厅")
 APP_HOST = os.getenv("APP_HOST", "0.0.0.0")
 APP_PORT = int(os.getenv("APP_PORT", "3643"))
 REQUEST_TIMEOUT = int(os.getenv("REQUEST_TIMEOUT_SECONDS", "10"))
@@ -26,12 +37,14 @@ lunar_data = {}
 warning_data = {}
 
 
-def empty_sensor_state():
+def empty_sensor_state(sensor_mac="Nodata", display_name="Nodata"):
     return {
         "temp": "-",
         "humi": "-",
         "volt": "Nodata",
-        "name": "Nodata",
+        "name": sensor_mac,
+        "mac": sensor_mac,
+        "display_name": display_name,
         "rssi": "Nodata",
         "batt": "Nodata",
         "time": "-",
@@ -39,12 +52,16 @@ def empty_sensor_state():
     }
 
 
-def build_sensor_state(name, temp, humi, volt, rssi, batt):
+def build_sensor_state(sensor_mac, temp, humi, volt, rssi, batt, display_name):
+    safe_mac = sensor_mac or "Nodata"
+    safe_display_name = display_name or safe_mac
     return {
         "temp": temp,
         "humi": humi,
         "volt": volt,
-        "name": name,
+        "name": safe_mac,
+        "mac": safe_mac,
+        "display_name": safe_display_name,
         "rssi": rssi,
         "batt": batt,
         "time": time.asctime(time.localtime(time.time())),
@@ -52,8 +69,16 @@ def build_sensor_state(name, temp, humi, volt, rssi, batt):
     }
 
 
-innersen = empty_sensor_state()
-outersen = empty_sensor_state()
+SENSOR_NAME_MAP = {
+    INNER_SENSOR_MAC: INNER_SENSOR_NAME,
+    OUTER_SENSOR_MAC: OUTER_SENSOR_NAME,
+    LIVING_SENSOR_MAC: LIVING_SENSOR_NAME,
+}
+
+
+innersen = empty_sensor_state(INNER_SENSOR_MAC, INNER_SENSOR_NAME)
+outersen = empty_sensor_state(OUTER_SENSOR_MAC, OUTER_SENSOR_NAME)
+livingsen = empty_sensor_state(LIVING_SENSOR_MAC, LIVING_SENSOR_NAME)
 extra_sensors = {}
 
 rev_db_add1 = False
@@ -91,9 +116,9 @@ def get_sentence():
 
 @app.route("/sensors", methods=["GET", "POST"])
 def fetch_sensor():
-    global innersen, outersen, extra_sensors, rev_db_add1, rev_db_add2
+    global innersen, outersen, livingsen, extra_sensors, rev_db_add1, rev_db_add2
 
-    name = flask.request.args.get("name")
+    sensor_mac = normalize_sensor_mac(flask.request.args.get("name"))
     temp = flask.request.args.get("temp")
     humi = flask.request.args.get("humi")
     batt = flask.request.args.get("bat")
@@ -101,22 +126,33 @@ def fetch_sensor():
     rssi = flask.request.args.get("rssi")
 
     try:
-        if name == INNER_SENSOR_MAC:
-            innersen = build_sensor_state(name, temp, humi, volt, rssi, batt)
+        if sensor_mac == INNER_SENSOR_MAC:
+            innersen = build_sensor_state(
+                sensor_mac, temp, humi, volt, rssi, batt, INNER_SENSOR_NAME
+            )
             rev_db_add1 = not rev_db_add1
 
-        elif name == OUTER_SENSOR_MAC:
-            outersen = build_sensor_state(name, temp, humi, volt, rssi, batt)
+        elif sensor_mac == OUTER_SENSOR_MAC:
+            outersen = build_sensor_state(
+                sensor_mac, temp, humi, volt, rssi, batt, OUTER_SENSOR_NAME
+            )
             rev_db_add2 = not rev_db_add2
-        elif name:
-            extra_sensors[name] = build_sensor_state(name, temp, humi, volt, rssi, batt)
+        elif sensor_mac == LIVING_SENSOR_MAC:
+            livingsen = build_sensor_state(
+                sensor_mac, temp, humi, volt, rssi, batt, LIVING_SENSOR_NAME
+            )
+        elif sensor_mac:
+            display_name = SENSOR_NAME_MAP.get(sensor_mac, sensor_mac)
+            extra_sensors[sensor_mac] = build_sensor_state(
+                sensor_mac, temp, humi, volt, rssi, batt, display_name
+            )
     finally:
         return "123"
 
 
 @app.route("/getSensor", methods=["GET"])
 def get_sensor():
-    sensors = [innersen, outersen]
+    sensors = [innersen, outersen, livingsen]
     for sensor_name in sorted(extra_sensors.keys()):
         sensors.append(extra_sensors[sensor_name])
     return flask.jsonify(sensors)
@@ -164,15 +200,18 @@ def update_warning():
 
 @scheduler.task("interval", id="delete_stale_sensor_job", seconds=700, misfire_grace_time=900)
 def delete_data():
-    global innersen, outersen, extra_sensors
+    global innersen, outersen, livingsen, extra_sensors
 
     now = time.time()
 
     if now - innersen["stamp"] > 1500:
-        innersen = empty_sensor_state()
+        innersen = empty_sensor_state(INNER_SENSOR_MAC, INNER_SENSOR_NAME)
 
     if now - outersen["stamp"] > 1500:
-        outersen = empty_sensor_state()
+        outersen = empty_sensor_state(OUTER_SENSOR_MAC, OUTER_SENSOR_NAME)
+
+    if now - livingsen["stamp"] > 1500:
+        livingsen = empty_sensor_state(LIVING_SENSOR_MAC, LIVING_SENSOR_NAME)
 
     stale_sensor_names = []
     for sensor_name, sensor_state in extra_sensors.items():

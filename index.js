@@ -26,7 +26,10 @@ let widgetRefreshPromise = null;
 
 renderApp.get('/config.js', (req, res) => {
   res.type('application/javascript');
-  res.send(`window.__APP_CONFIG__ = ${JSON.stringify({ apiBaseUrl: API_BASE_URL })};`);
+  res.send(`window.__APP_CONFIG__ = ${JSON.stringify({
+    apiBaseUrl: API_BASE_URL,
+    sensorQueryUrl: '/api/getSensor',
+  })};`);
 });
 
 renderApp.get('/healthz', (req, res) => {
@@ -80,6 +83,24 @@ renderApp.get('/widget.png', async (req, res) => {
   } catch (error) {
     console.error('Serving cached widget failed:', error);
     sendWidgetFallback(res);
+  }
+});
+
+renderApp.get('/api/getSensor', async (req, res) => {
+  try {
+    const upstreamResponse = await fetch(`${API_BASE_URL}/getSensor`, { cache: 'no-store' });
+    const payloadText = await upstreamResponse.text();
+
+    res.status(upstreamResponse.status);
+    res.set('Cache-Control', 'no-store');
+    res.set('Content-Type', upstreamResponse.headers.get('content-type') || 'application/json');
+    res.send(payloadText);
+  } catch (error) {
+    console.error('Proxy /api/getSensor failed:', error);
+    res.status(502).json({
+      error: 'sensor_proxy_failed',
+      message: error.message,
+    });
   }
 });
 
