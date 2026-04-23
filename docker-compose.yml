@@ -3,6 +3,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
+    image: sydneymrcat/kindle-calendar-owl:latest
     container_name: backup-kindle
     restart: unless-stopped
     ports:
