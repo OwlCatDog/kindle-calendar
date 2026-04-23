@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+	<meta charset="UTF-8">
+	<meta http-equiv="X-UA-Compatible" content="IE=edge">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<link rel="stylesheet" href="./css/time.css">
+	<title>Displayer</title>
+</head>
+
+<body>
+	<div id="main">
+		<div class="header">
+			<div>
+				<div id="sentence">
+				</div>
+				<div id="warning">
+					<!-- <img src="" alt="" srcset="" id="warnIcon">
+					<div id="warnText"></div> -->
+				</div>
+			</div>
+			<div class="battery">
+				<img src="" id="batt">
+				<div id="batteryLevel"></div>
+			</div>
+		</div>
+		<div class="page">
+			<div class="time_container">
+				<div id="time"></div>
+				<div class="week_day">
+					<div id="date"></div>
+					<div id="week"></div>
+				</div>
+			</div>
+			<div class="date_container">
+				<!-- <div class="date" id="date"></div>-->
+				<div class="date" id="lunar"></div>
+				<div class="date" id="festival"></div>
+			</div>
+			<div id="ww_bc810257cf5c1" v='1.3' loc='id' a='{"t":"horizontal","lang":"zh","sl_lpl":1,"ids":["wl11440"],"font":"Arial","sl_ics":"one_a","el_nme":3,"sl_sot":"celsius","cl_bkg":"#FFFFFF00","cl_font":"#000000","cl_cloud":"#d4d4d4","cl_persp":"#2196F3","cl_sun":"#FFC107","cl_moon":"#FFC107","cl_thund":"#FF5722"}'><a href="https://weatherwidget.org/zh/" id="ww_bc810257cf5c1_u" target="_blank">天气插件</a></div>
+			<script async src="https://app1.weatherwidget.org/js/?id=ww_bc810257cf5c1"></script>
+			<div id="sen">
+				<div id="temp" class="subsen">
+					<img src="./img/sen/temperature.png">
+					<label class="spname">室内/室外</label>
+					<div class="view-report-parr">
+						<label class="num" id="valtmp-in">--°C</label>
+						<label class="num" id="valtmp-out">--°C</label>
+					</div>
+				</div>
+				<div id="humi" class="subsen">
+					<img src="./img/sen/湿度.png">
+					<label class="spname">室内/室外</label>
+					<div class="view-report-parr">
+						<label class="num" id="valhmi-in">--%</label>
+						<label class="num" id="valhmi-out">--%</label>
+					</div>
+				</div>
+				<div id="timed" class="subsen">
+					<img src="./img/sen/时间.png">
+					<label class="spname">上次报告</label>
+					<div class="view-report-parr">
+						<label class="num" id="valtmew-in">??</label>
+						<label class="num" id="valtmew-out">??</label>
+					</div>
+				</div>
+			</div>
+			<!-- <div id="he-plugin-standard"></div> -->
+		</div><!-- <-footer-> -->
+
+</body>
+<script src="./config.js"></script>
+<script src="./js/time.js"></script>
+<!-- <script>
+	WIDGET = {
+	"CONFIG": {
+		"layout": "1",
+		"width": "450",
+		"height": "100",
+		"background": "5",
+		"dataColor": "434343",
+		"language": "zh",
+		"city": "CN101230201",
+		"modules": "01",
+		"key": "c96f3e49a44e49cab0ff6fa194af62e4"
+	}
+	}
+	</script>
+<script src="https://widget.qweather.net/standard/static/js/he-standard-common.js?v=2.0"></script> -->
+
+</html>

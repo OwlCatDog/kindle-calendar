@@ -1,0 +1,23 @@
+services:
+  backup-kindle:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: backup-kindle
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+      - "1145:1145"
+      - "3643:3643"
+    environment:
+      PORT: 3000
+      RENDER_PORT: 1145
+      API_BASE_URL: http://127.0.0.1:3643
+      APP_HOST: 0.0.0.0
+      APP_PORT: 3643
+      TIANAPI_KEY: ${TIANAPI_KEY:-xxx}
+      QWEATHER_KEY: ${QWEATHER_KEY:-xxx}
+      QWEATHER_LOCATION: ${QWEATHER_LOCATION:-xxx}
+      SENSOR_INNER_MAC: ${SENSOR_INNER_MAC:-A4:C1:38:CF:B0:D6}
+      SENSOR_OUTER_MAC: ${SENSOR_OUTER_MAC:-A4:C1:38:D5:05:79}
+      TZ: ${TZ:-Asia/Shanghai}
