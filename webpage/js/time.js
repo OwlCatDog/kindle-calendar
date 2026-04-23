@@ -2,7 +2,6 @@ const appConfig = window.__APP_CONFIG__ || {};
 const apiBaseUrl = (appConfig.apiBaseUrl || "http://127.0.0.1:3643").replace(/\/$/, "");
 
 const sensorQuery = `${apiBaseUrl}/getSensor`;
-const elegantSentenceQuery = `${apiBaseUrl}/elegent`;
 const dateQuery = `${apiBaseUrl}/lunar`;
 const warningQuery = `${apiBaseUrl}/warning`;
 
@@ -131,21 +130,12 @@ function updatePower() {
 }
 
 function isWeatherWidgetRendered() {
-    const widgetNode = document.getElementById("ww_bc810257cf5c1");
-    if (!widgetNode) {
+    const widgetImage = document.getElementById("widgetCacheImage");
+    if (!widgetImage) {
         return true;
     }
 
-    if (widgetNode.querySelector("iframe")) {
-        return true;
-    }
-
-    const normalizedText = widgetNode.textContent.replace(/\s+/g, "").trim();
-    if (normalizedText !== "" && normalizedText !== "天气插件") {
-        return true;
-    }
-
-    return widgetNode.children.length > 1;
+    return widgetImage.complete && widgetImage.naturalWidth > 0;
 }
 
 function waitForWidgetRender() {

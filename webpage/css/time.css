@@ -46,10 +46,13 @@ body {
     left: 10px;
 } */
 
-#ww_bc810257cf5c1 {
+#widgetCacheImage {
     position: absolute;
     left: 40px;
     top: 20px;
+    width: 456px;
+    height: auto;
+    object-fit: contain;
 }
 
 .battery {
